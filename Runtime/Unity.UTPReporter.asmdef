@@ -1,15 +1,15 @@
 {
     "name": "Unity.TestFramework.UTPReporter",
     "references": [
-        "UnityEngine.TestRunner"
+        "UnityEngine.TestRunner",
+        "Unity.TestProtocol"
     ],
     "includePlatforms": [],
     "excludePlatforms": [],
     "allowUnsafeCode": false,
     "overrideReferences": true,
     "precompiledReferences": [
-        "nunit.framework.dll",
-        "Unity.TestProtocol.dll"
+        "nunit.framework.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

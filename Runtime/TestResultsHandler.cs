@@ -38,11 +38,6 @@ namespace Unity.TestFramework.UTPReporter
         {
             Send(suiteFinishedResult);
             GetPlayerConnection().Send(TestRunFinishedMessageID, new byte[1] { 1 });
-            if (Application.platform == RuntimePlatform.IPhonePlayer)
-            {
-                Thread.Sleep(1000);
-                Application.Quit();
-            }
         }
 
         public void TestStarted(ITest testStartedResult)

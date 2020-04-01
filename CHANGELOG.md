@@ -1,3 +1,10 @@
+## [1.0.0] - 2020-04-01
+Move out of preview
+
+## [0.2.3] - 2020-03-31
+Update UTP version to 1.0.0
+Fix player build error when not including tests
+
 ## [0.1.3] - 2019-06-15
 Fixed various compilation issues
 
