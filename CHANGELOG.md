@@ -1,3 +1,6 @@
+## [1.0.1] - 2020-04-22
+Upgrade test protocol version to avoid test assembly collisions
+
 ## [1.0.0] - 2020-04-01
 Move out of preview
 

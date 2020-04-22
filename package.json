@@ -1,24 +1,26 @@
 {
   "name": "com.unity.test-framework.utp-reporter",
   "displayName": "Test Protocol Reporter",
-  "version": "1.0.0-preview",
+  "version": "1.0.1-preview",
   "unity": "2019.3",
   "description": "Translates test messages into UTP messages and sends them over Player Connection",
   "dependencies": {
     "com.unity.test-framework": "1.1.1",
-    "com.unity.external.test-protocol": "1.0.0-preview"
+    "com.unity.external.test-protocol": "1.0.1-preview"
   },
   "keywords": [
     "utp",
     "test protocol"
   ],
   "relatedPackages": {
-    "com.unity.test-framework.utp-reporter.tests": "1.0.0-preview"
+    "com.unity.test-framework.utp-reporter.tests": "1.0.1-preview"
+  },
+  "upmCi": {
+    "footprint": "525a28d9674507d81accc8f0ce62bf416e61844a"
   },
   "repository": {
-    "footprint": "c9f618d5d62db8fea6174dc41492bc7dd8c4a500",
     "type": "git",
     "url": "https://github.cds.internal.unity3d.com/unity/com.unity.test-framework.utp-reporter.git",
-    "revision": "cddb8261c2c2e03a25a47cc8a7d9bd1c58050eec"
+    "revision": "c9f1b2dfcc266383d23054179824eb54013b84bc"
   }
 }
