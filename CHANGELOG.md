@@ -1,3 +1,6 @@
+## [1.0.2] - 2020-04-23
+Fix meta files
+
 ## [1.0.1] - 2020-04-22
 Upgrade test protocol version to avoid test assembly collisions
 
