@@ -1,3 +1,6 @@
+## [1.1.0] - 2021-01-11
+Add support for build configurations
+
 ## [1.0.2] - 2020-04-23
 Fix meta files
 
