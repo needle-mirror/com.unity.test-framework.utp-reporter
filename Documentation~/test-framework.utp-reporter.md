@@ -5,8 +5,8 @@ a Unity Test Framework run from inside a **player** as Unity Test Protocol (UTP)
 
 The Editor already emits UTP for the runs it hosts. A player does not: it runs the tests itself and
 has no channel to the process that started it beyond its log and its player connection. This package
-is that channel. It subscribes to the test run in the player, converts each NUnit event into the
-equivalent UTP message, and emits it over the transport the run was started with — so a harness such
+is that channel. It subscribes to the test run in the player, converts what the run reports into
+the equivalent UTP messages, and emits them over the transport the run was started with — so a harness such
 as the Unified Test Runner sees the same protocol from a player run as from an Editor run.
 
 ## Requirements
@@ -76,27 +76,39 @@ emitted the final messages and relies on Unity's orderly shutdown to flush the l
 
 ## What is reported
 
-Each NUnit event the test framework raises is converted to UTP:
+The reporter is an `ITestRunCallback`, so it reads the NUnit nodes the test framework hands over
+rather than a serialized copy of them. Each callback is converted to UTP:
 
-| NUnit event | UTP message |
+| Callback | UTP message |
 |---|---|
-| `start-suite` | `TestGroup` start, named with the suite's full name |
-| `test-suite` | `TestGroup` end — suppressed if the matching start was never seen |
-| `start-test`, or a `test-case` with no outcome yet | `TestStatus` Begin |
-| `test-case` with an outcome | `TestStatus` End, preceded by a synthesized Begin if none was reported |
-| `test-output` on the `Out`, `Progress` or `Error` stream | `Info` or `Error`; text that is already a `##utp` message is deserialized and passed through unchanged |
-| `test-output` on any other stream | `Warning` describing the unexpected event |
+| `RunStarted` / `RunFinished` | `TestGroup` start and end for the run's root suite |
+| `TestStarted` on a suite | `TestGroup` start, named with the suite's full name — an assembly suite by its file rather than its full on-disk path |
+| `TestFinished` on a suite | `TestGroup` end |
+| `TestStarted` on a test | `TestStatus` Begin |
+| `TestFinished` on a test | `TestStatus` End, preceded by a synthesized Begin if none was reported |
+
+The root suite arrives twice, once through the run callbacks and again as an ordinary test callback,
+so the run callbacks own that pair and the test callbacks skip it.
+
+A node's parent is read from `ITest.Parent`, so the shape of the subtree never depends on the order
+events arrive in. Only the outermost group leaves `parentSpanId` absent — absent rather than
+`Guid.Empty`, which a consumer honours as "I am a root" and would use to detach the subtree from its
+own scope.
 
 Both the Begin and the End of a test carry the identity a consumer needs to match them up:
 
-* **`classname`**, and **`methodname`** on the Begin. An attempt that never reports an End — the
-  player died while the test was running — is only ever seen through its Begin, so identity the
-  Begin omits cannot be recovered.
-* **`categories`**, merging the categories the test declares itself with the ones it inherits from
-  its fixture. NUnit reports fixture categories on the fixture node only, so the reporter remembers
-  them per fixture as suites start and attaches them to the tests inside.
-* **`iteration`**, the attempt index. A repeat iteration takes precedence over a retry iteration,
-  matching the precedence the Editor's reporter applies.
+* **`uniqueName`**, the key a consumer matches a test on, derived the way the Editor derives it so
+  that a player computes the same key for the same test.
+* **`spanId`** and **`parentSpanId`**, derived from `uniqueName` and the attempt index, so a Begin
+  and its End resolve to the same span without either being remembered.
+* **`classname`** and **`methodname`**. An attempt that never reports an End — the player died
+  while the test was running — is only ever seen through its Begin, so identity the Begin omits
+  cannot be recovered.
+* **`categories`**, merging the categories the test declares itself with those declared above it. A
+  category can be set on the fixture or on an enclosing suite, so the whole ancestor chain is
+  unioned.
+* **`iteration`**, the attempt index, reported only when it is non-zero. A repeat iteration takes
+  precedence over a retry iteration, matching the precedence the Editor's reporter applies.
 
 The End additionally carries the outcome, the duration in microseconds, the failure message and the
 stack trace.
@@ -105,4 +117,5 @@ stack trace.
 
 | Date | Reason |
 |---|---|
+| 2026-09-21 | Updated what is reported for the `ITest`-sourced converter. |
 | 2026-09-18 | Replaced the package documentation template with documentation of the package. |

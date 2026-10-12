@@ -1,11 +1,12 @@
 using System;
+using System.Collections.Generic;
 using System.Text;
 using NUnit.Framework.Interfaces;
 using Unity.TestProtocol;
+using Unity.TestProtocol.Messages;
 using UnityEngine;
 using UnityEngine.TestRunner;
 using UnityEngine.Networking.PlayerConnection;
-
 
 #if !UNITY_EDITOR
 using Unity.TestFramework.UTPReporter;
@@ -28,7 +29,7 @@ namespace Unity.TestFramework.UTPReporter
         private const string UtpOutputModeLog = "log";
         private const string UtpOutputModePlayerConnection = "player-connection";
         private const string UtpPrefix = "##utp:";
-        private readonly INUnitXmlToUTPConverter m_Converter;
+        private readonly INUnitToUtpConverter m_Converter;
         private static readonly Guid UtpMessage = new Guid("28e419dab96b4e578a2717330f0e0b6f");
         private static readonly Guid TestRunFinishedMessageID = new Guid("8eb67a7f8faf49908e3d9a3ea8fab600");
         private UtpOutputMode m_OutputMode = UtpOutputMode.PlayerConnection;
@@ -44,7 +45,7 @@ namespace Unity.TestFramework.UTPReporter
         /// </summary>
         public TestResultToUtpMessage()
         {
-            m_Converter = new NUnitXmlToUTPConverter();
+            m_Converter = new NUnitToUtpConverter();
         }
 
         /// <summary>
@@ -54,7 +55,7 @@ namespace Unity.TestFramework.UTPReporter
         public void RunStarted(ITest suiteStartedResult)
         {
             m_OutputMode = ParseOutputMode(GetCommandLineArgs());
-            Send(suiteStartedResult);
+            Emit(m_Converter.RunStarted(suiteStartedResult));
         }
 
         /// <summary>
@@ -65,7 +66,8 @@ namespace Unity.TestFramework.UTPReporter
         /// <param name="suiteFinishedResult">The result of the suite the run finished with.</param>
         public void RunFinished(ITestResult suiteFinishedResult)
         {
-            Send(suiteFinishedResult);
+            Emit(m_Converter.RunFinished(suiteFinishedResult));
+
             if (m_OutputMode == UtpOutputMode.PlayerConnection)
             {
                 // In player-connection mode we avoid quitting immediately because there can still be
@@ -87,7 +89,7 @@ namespace Unity.TestFramework.UTPReporter
         /// <param name="testStartedResult">The test that started.</param>
         public void TestStarted(ITest testStartedResult)
         {
-            Send(testStartedResult);
+            Emit(m_Converter.TestStarted(testStartedResult));
         }
 
         /// <summary>
@@ -96,13 +98,15 @@ namespace Unity.TestFramework.UTPReporter
         /// <param name="testFinishedResult">The result of the test that finished.</param>
         public void TestFinished(ITestResult testFinishedResult)
         {
-            Send(testFinishedResult);
+            Emit(m_Converter.TestFinished(testFinishedResult));
         }
 
-        private void Send(IXmlNodeBuilder xmlNodeBuilder)
+        private void Emit(IEnumerable<Message> messages)
         {
-            var xml = xmlNodeBuilder.ToXml(recursive: false).OuterXml;
-            var messages = m_Converter.Convert(xml);
+            if (messages == null)
+            {
+                return;
+            }
 
             foreach (var m in messages)
             {

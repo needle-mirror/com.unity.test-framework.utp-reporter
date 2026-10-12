@@ -1,15 +1,34 @@
-## [1.3.3-exp.1] - 2026-10-12
+## [2.0.0-exp.2] - 2026-10-12
 
 ### Changed
 - Depend on `com.unity.external.test-protocol` `2.0.1-exp.1`, which reports a process id of 0 instead of throwing on
   platforms that do not support System.Diagnostics.Process, such as the web.
 
-## [1.3.2-exp.1] - 2026-10-09
+## [2.0.0-exp.1] - 2026-09-24
+
+### Added
+- Report `uniqueName` on both test messages. It is the key a consumer matches a test on, it is not
+  an NUnit XML attribute, and it was therefore unreachable while the reporter read a serialized copy
+  of the node instead of the node itself (UTR-1334).
+- Announce `spanId` and `parentSpanId` on every message. Ids are derived the same way the editor
+  reporter derives them - SHA256 over `salt:key[:iteration]`, keyed on `uniqueName` - with a fresh
+  per-process salt rather than the process id, which the OS reuses.
 
 ### Changed
-- Released as experimental: the `com.unity.external.test-protocol` dependency has no released version, so the package
-  cannot be released either. Content is `1.3.1` plus documentation of the public API and of the package.
-- Dropped the Moq-based tests, which projects that inject this package cannot resolve.
+- Source test identity and hierarchy from the `ITest` / `ITestResult` the callback hands over,
+  instead of serializing them to XML and parsing the result back. A node's parent is
+  `ITest.Parent`, so grouping no longer depends on the order events happen to arrive in, and
+  fixture-declared categories are found by walking the tree rather than being remembered by class
+  name.
+- Report a suite named by its assembly path under the file name rather than the full on-disk path.
+- Report `iteration` only when an attempt index is non-zero, rather than always writing a `0`.
+
+### Removed
+- `INUnitXmlToUTPConverter` / `NUnitXmlToUTPConverter`, replaced by `INUnitToUtpConverter` /
+  `NUnitToUtpConverter`, which take the NUnit nodes directly. These types were public, so this is a
+  breaking change for any out-of-tree caller; the reporter itself was their only known caller, and
+  the `start-test`, `start-suite` and `test-output` branches they carried were unreachable from it
+  because `ITest.ToXml` cannot produce those element names.
 
 ## [1.3.1] - 2026-09-18
 
