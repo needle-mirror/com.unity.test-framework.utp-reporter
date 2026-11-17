@@ -343,6 +343,37 @@ namespace Unity.TestFramework.UTPReporter.Tests
             Assert.That(m_Converter.TestFinished(result).Last().GetLong("durationMicroseconds"), Is.EqualTo(1500000L));
         }
 
+        // The consumer leaves a group span open until its End carries a duration.
+        [Test]
+        public void SuiteFinished_ReportsDurationInMilliseconds()
+        {
+            var root = new TestSuite("Root");
+            var fixture = Tree.Fixture<Sample>(root);
+            m_Converter.RunStarted(root);
+            var result = Tree.SuiteResult(fixture);
+            result.Duration = 1.5d;
+
+            var end = m_Converter.TestFinished(result).Single();
+
+            Assert.That(end.Is(TestGroupMessage.MessageType));
+            Assert.That(end.GetLong("duration"), Is.EqualTo(1500L));
+            Assert.That(end.HasField("durationMicroseconds"), Is.False);
+        }
+
+        [Test]
+        public void RunFinished_ReportsDurationInMilliseconds()
+        {
+            var root = new TestSuite("Root");
+            m_Converter.RunStarted(root);
+            var result = Tree.SuiteResult(root);
+            result.Duration = 2d;
+
+            var end = m_Converter.RunFinished(result).Single();
+
+            Assert.That(end.GetLong("duration"), Is.EqualTo(2000L));
+            Assert.That(end.HasField("durationMicroseconds"), Is.False);
+        }
+
         [Test]
         public void TestFinished_ReportsTheFailureMessageAndStackTrace()
         {

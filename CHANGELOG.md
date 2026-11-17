@@ -1,3 +1,9 @@
+## [2.0.0-exp.3] - 2026-11-17
+
+### Fixed
+- Report the suite's duration on the `TestGroup` end message, in milliseconds in `duration` as the editor reporter
+  does. Without it a consumer that closes a group span on its duration kept every suite open.
+
 ## [2.0.0-exp.2] - 2026-10-12
 
 ### Changed

@@ -94,7 +94,7 @@ namespace Unity.TestFramework.UTPReporter
         /// <inheritdoc />
         public IEnumerable<Message> RunFinished(ITestResult result)
         {
-            return GroupEnd(result?.Test);
+            return GroupEnd(result);
         }
 
         /// <inheritdoc />
@@ -117,7 +117,7 @@ namespace Unity.TestFramework.UTPReporter
                 return k_NoMessages;
             }
 
-            return test.IsSuite ? GroupEnd(test) : LeafEnd(result);
+            return test.IsSuite ? GroupEnd(result) : LeafEnd(result);
         }
 
         bool IsRunRoot(ITest test)
@@ -135,14 +135,19 @@ namespace Unity.TestFramework.UTPReporter
             return Group(test, TestGroupMessage.CreateGroupStart(SuiteName(test)));
         }
 
-        IEnumerable<Message> GroupEnd(ITest test)
+        IEnumerable<Message> GroupEnd(ITestResult result)
         {
+            var test = result?.Test;
             if (test == null)
             {
                 return k_NoMessages;
             }
 
-            return Group(test, TestGroupMessage.CreateGroupEnd(SuiteName(test)));
+            // The consumer treats a group span as open until its End carries a duration. Reported as the
+            // editor's SuiteFinishedMessage does; NUnit clamps Duration, so the guard is for other ITestResults.
+            var message = TestGroupMessage.CreateGroupEnd(SuiteName(test));
+            message["duration"] = result.Duration > 0 ? (long)(result.Duration * 1000) : 0L;
+            return Group(test, message);
         }
 
         static IEnumerable<Message> Group(ITest test, Message message)
